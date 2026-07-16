@@ -43,7 +43,7 @@ class DoublyLinkedList:
 
     def show(self):
         cur = self.root
-        while cur: 
+        while cur:
             print(cur.data)
             cur = cur.next
 
@@ -88,22 +88,3 @@ class LRUCache:
         node = Node(key, value)
         self.nodes[key] = node
         self.list.prepend(node)
-
-
-def demo():
-    cache = LRUCache(2)
-
-    cache.put('user_name', 'e.martins')
-
-    assert cache.get('user_name') == 'e.martins'
-
-    cache.put('name', 'Eric')
-    cache.put('dob', '30/11/1992')
-
-    assert cache.get('user_name') is None
-
-    print('OK')
-
-
-if __name__ == "__main__":
-    demo()

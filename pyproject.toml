@@ -1,7 +1,10 @@
 [project]
 name = "senior-python"
 version = "0.1.0"
-description = "Add your description here"
+description = "Concurrency and systems primitives built from first principles for senior-engineer interview prep."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8"]

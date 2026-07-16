@@ -1,35 +1,11 @@
-import functools
 import time
 import random
-import logging
-logger = logging.getLogger(__name__)
+
+from retry_decorator import retry
 
 
-def retry(max_attempts, base, multiplier, allowed_errors):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            attempt = 0
-
-            while True:
-                try:
-                    return func(*args, **kwargs)
-                except allowed_errors:
-                    attempt += 1
-                    if attempt >= max_attempts:
-                        raise
-                    wait_in_seconds = base * (multiplier ** (attempt - 1))
-                    logger.warning(
-                        '%s failed on attempt %d/%d, retrying in %.1fs',
-                        func.__name__, attempt, max_attempts, wait_in_seconds,
-                    )
-                    time.sleep(wait_in_seconds + random.uniform(0, wait_in_seconds))   # "full jitter"
-
-        return wrapper
-    return decorator
-
-
-def test_exaustion_path():
+# --- Invariant: a failing call is attempted exactly max_attempts times, then re-raises ---
+def test_exhaustion_path():
     calls = []
 
     @retry(max_attempts=2, base=1, multiplier=1.4, allowed_errors=(ConnectionError,))
@@ -45,6 +21,7 @@ def test_exaustion_path():
     assert len(calls) == 2
 
 
+# --- Adversarial: an error outside allowed_errors is not retried, propagates immediately ---
 def test_flaky():
     calls = []
 
@@ -75,6 +52,7 @@ def test_succeeds_after_retries():
     assert len(calls) == 3
 
 
+# --- Invariant: backoff delays match the spec (base * multiplier^n), asserted with jitter stripped ---
 def test_backoff_delays():
     sleeps = []
     orig_sleep, orig_uniform = time.sleep, random.uniform
@@ -94,11 +72,3 @@ def test_backoff_delays():
 
     # 4 attempts -> sleeps after attempts 1,2,3: base*2^0, base*2^1, base*2^2
     assert sleeps == [1, 2, 4], sleeps
-
-
-if __name__ == '__main__':
-    test_exaustion_path()
-    test_flaky()
-    test_succeeds_after_retries()
-    test_backoff_delays()
-    print('ok')
