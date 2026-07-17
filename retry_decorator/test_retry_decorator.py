@@ -4,7 +4,6 @@ import random
 from retry_decorator import retry
 
 
-# --- Invariant: a failing call is attempted exactly max_attempts times, then re-raises ---
 def test_exhaustion_path():
     calls = []
 
@@ -21,7 +20,6 @@ def test_exhaustion_path():
     assert len(calls) == 2
 
 
-# --- Adversarial: an error outside allowed_errors is not retried, propagates immediately ---
 def test_flaky():
     calls = []
 
@@ -52,12 +50,11 @@ def test_succeeds_after_retries():
     assert len(calls) == 3
 
 
-# --- Invariant: backoff delays match the spec (base * multiplier^n), asserted with jitter stripped ---
 def test_backoff_delays():
     sleeps = []
     orig_sleep, orig_uniform = time.sleep, random.uniform
     time.sleep = lambda s: sleeps.append(s)
-    random.uniform = lambda a, b: 0.0   # strip jitter -> deterministic
+    random.uniform = lambda a, b: 0.0   # no jitter
     try:
         @retry(max_attempts=4, base=1, multiplier=2, allowed_errors=(ConnectionError,))
         def always_fails():

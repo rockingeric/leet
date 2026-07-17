@@ -37,9 +37,7 @@ class TokenBucket:
 
             # Try to retrieve requested tokens
             if self.tokens >= number_of_tokens:
-                # Deliberate: widen the critical section so test_thread_safe reliably
-                # fails if the lock is ever removed. The GIL would otherwise mask the
-                # read-modify-write race on self.tokens.
+                # widen the critical section so the race shows if the lock is removed
                 time.sleep(0.0001)
                 self.tokens -= number_of_tokens
             else:
