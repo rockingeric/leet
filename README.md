@@ -6,7 +6,7 @@ Tiered, spec-first Python practice with adversarial, invariant-based tests.
 - [x] LRU cache
 - [x] Token bucket rate limiter
 - [x] Retry decorator
-- [ ] Connection pool
+- [x] Connection pool
 
 **Tier 2 — DSA** (classic algorithm screening)
 - [ ] _coming soon_
