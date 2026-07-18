@@ -1,6 +1,8 @@
 import time
 import random
 
+import pytest
+
 from retry_decorator import retry
 
 
@@ -12,10 +14,8 @@ def test_exhaustion_path():
         calls.append(1)
         raise ConnectionError
 
-    try:
+    with pytest.raises(ConnectionError):
         load_users()
-    except ConnectionError:
-        pass
 
     assert len(calls) == 2
 
@@ -28,10 +28,8 @@ def test_flaky():
         calls.append(1)
         raise ValueError
 
-    try:
+    with pytest.raises(ValueError):
         load_users()
-    except ValueError:
-        pass
 
     assert len(calls) == 1
 
@@ -44,28 +42,22 @@ def test_succeeds_after_retries():
         calls.append(1)
         if len(calls) < 3:
             raise ConnectionError
-        return 'users'
+        return "users"
 
-    assert load_users() == 'users'
+    assert load_users() == "users"
     assert len(calls) == 3
 
 
-def test_backoff_delays():
+def test_backoff_delays(monkeypatch):
     sleeps = []
-    orig_sleep, orig_uniform = time.sleep, random.uniform
-    time.sleep = lambda s: sleeps.append(s)
-    random.uniform = lambda a, b: 0.0   # no jitter
-    try:
-        @retry(max_attempts=4, base=1, multiplier=2, allowed_errors=(ConnectionError,))
-        def always_fails():
-            raise ConnectionError
+    monkeypatch.setattr(time, "sleep", lambda seconds: sleeps.append(seconds))
+    monkeypatch.setattr(random, "uniform", lambda a, b: 0.0)
 
-        try:
-            always_fails()
-        except ConnectionError:
-            pass
-    finally:
-        time.sleep, random.uniform = orig_sleep, orig_uniform
+    @retry(max_attempts=4, base=1, multiplier=2, allowed_errors=(ConnectionError,))
+    def always_fails():
+        raise ConnectionError
 
-    # 4 attempts -> sleeps after attempts 1,2,3: base*2^0, base*2^1, base*2^2
-    assert sleeps == [1, 2, 4], sleeps
+    with pytest.raises(ConnectionError):
+        always_fails()
+
+    assert sleeps == [1, 2, 4]

@@ -70,12 +70,13 @@ class LRUCache:
         self.list = DoublyLinkedList()
 
     def get(self, key):
-        if key in self.nodes:
-            return self.list.get(self.nodes[key]).data
+        node = self.nodes.get(key)
+        if node is not None:
+            return self.list.get(node).data
 
     def put(self, key, value):
-        if key in self.nodes:
-            node = self.nodes[key]
+        node = self.nodes.get(key)
+        if node is not None:
             node.data = value
             self.list.get(node)
             return

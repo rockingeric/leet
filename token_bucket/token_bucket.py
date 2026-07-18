@@ -1,5 +1,5 @@
-import time
 import threading
+import time
 
 
 class TokenBucket:
@@ -16,28 +16,23 @@ class TokenBucket:
             return False
 
         with self.lock:
-
             current_time = time.monotonic()
-
-            # Try to refil
             if self.tokens < self.capacity:
                 time_elapsed = current_time - self.last_refill
 
                 if time_elapsed >= self.refill_period:
                     whole_periods, rest = divmod(time_elapsed, self.refill_period)
-                    qty_can_refill = whole_periods * self.refill_rate
+                    refill_amount = whole_periods * self.refill_rate
                     refill_boundary = current_time - rest
 
                     empty_spots = self.capacity - self.tokens
-                    qty_to_refil = min(empty_spots, qty_can_refill)
+                    tokens_to_add = min(empty_spots, refill_amount)
 
-                    if qty_to_refil > 0:
+                    if tokens_to_add > 0:
                         self.last_refill = refill_boundary
-                        self.tokens += qty_to_refil
+                        self.tokens += tokens_to_add
 
-            # Try to retrieve requested tokens
             if self.tokens >= number_of_tokens:
-                # widen the critical section so the race shows if the lock is removed
                 time.sleep(0.0001)
                 self.tokens -= number_of_tokens
             else:

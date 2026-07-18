@@ -8,6 +8,35 @@ list that orders nodes by recency (most-recent at the front, LRU at the tail).
 Eviction is a tail unlink; a touch is an unlink-and-prepend. Both are `O(1)`
 because the map hands us the node directly — no list scan.
 
+## Workflow
+
+```text
+get(key) / put(key, value)
+          |
+          v
+   [hash map lookup]
+      /        \
+     v          v
+   hit         miss
+     |           |
+     v           v
+ move node     new node
+ to front        |
+     |           v
+     +-------> prepend
+                 |
+                 v
+        capacity exceeded?
+              /     \
+             no     yes
+             |        |
+             v        v
+           return   evict tail
+                      |
+                      v
+                 delete map entry
+```
+
 ## Invariants
 - **Capacity is never exceeded** — `len(nodes) <= capacity` after every operation.
 - **Map and list stay in sync** — one node per key, list length == map size.

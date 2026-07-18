@@ -7,6 +7,38 @@ or grant nothing and return `False`. Must be safe under concurrent callers.
 **Design.** Lazy refill: instead of a background timer, each `consume` computes how
 many whole refill periods have elapsed since `last_refill` and tops up accordingly.
 
+## Workflow
+
+```text
+consume(n)
+    |
+    v
+[lock]
+    |
+    v
+current time - last_refill
+    |
+    v
+whole refill period passed?
+   /      \
+  no      yes
+  |         |
+  v         v
+check     add tokens
+balance   (clamped to capacity)
+  |         |
+  v         v
+enough tokens for n?
+   /      \
+  no      yes
+  |         |
+  v         v
+False   subtract n
+           |
+           v
+          True
+```
+
 ## Invariants
 - **Capacity ceiling** — refill is clamped by `empty_spots`; tokens never exceed `capacity`,
   no matter how long the bucket sat idle.

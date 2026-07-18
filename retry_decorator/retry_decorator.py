@@ -1,7 +1,9 @@
-import functools
-import time
-import random
 import logging
+import functools
+import random
+import time
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -18,12 +20,13 @@ def retry(max_attempts, base, multiplier, allowed_errors):
                     attempt += 1
                     if attempt >= max_attempts:
                         raise
-                    wait_in_seconds = base * (multiplier ** (attempt - 1))
+                    wait_seconds = base * (multiplier ** (attempt - 1))
+                    jitter = random.uniform(0, wait_seconds)
                     logger.warning(
-                        '%s failed on attempt %d/%d, retrying in %.1fs',
-                        func.__name__, attempt, max_attempts, wait_in_seconds,
+                        "%s failed on attempt %d/%d, retrying in %.1fs",
+                        func.__name__, attempt, max_attempts, wait_seconds,
                     )
-                    time.sleep(wait_in_seconds + random.uniform(0, wait_in_seconds))   # "full jitter"
+                    time.sleep(wait_seconds + jitter)
 
         return wrapper
     return decorator

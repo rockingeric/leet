@@ -7,6 +7,40 @@ name and re-raising everything else.
 **Design.** A three-level decorator factory: `retry(...)` captures the config, `decorator`
 captures the function, `wrapper` runs the attempt loop.
 
+## Workflow
+
+```text
+retry(...) config
+       |
+       v
+   decorator(func)
+       |
+       v
+   wrapper(*args, **kwargs)
+       |
+       v
+ call func
+   /   \
+  ok   fail
+  |      |
+  v      v
+return  allowed error?
+          /      \
+         no      yes
+         |         |
+         v         v
+     re-raise   attempts left?
+                 /      \
+                no      yes
+                |         |
+                v         v
+             raise   backoff = base * multiplier^(n-1)
+                          + jitter
+                            |
+                            v
+                     sleep and retry
+```
+
 ## Invariants
 - **Attempt count** — a persistently failing call runs exactly `max_attempts` times, then re-raises.
 - **Selective catching** — only `allowed_errors` are retried; any other exception propagates on the first raise.
